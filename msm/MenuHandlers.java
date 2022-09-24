@@ -41,7 +41,13 @@ class ServerMenuHandler extends MSM implements ActionListener {
 class PreferencesMenuHandler extends MSM implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
-        String s = (String) JOptionPane.showInputDialog(getMSMFrame().frame, LanguageManager.getTranslationsFromFile("SelectLanguage"), LanguageManager.getTranslationsFromFile("Language"), JOptionPane.QUESTION_MESSAGE, null, LanguageManager.langs, LanguageManager.langs[LanguageManager.getCurrentLang()]);            
+        JFrame frame;
+        try {
+            frame = getMSMFrame().frame;
+        } catch (NullPointerException ex) {
+            frame = null;
+        }
+        String s = (String) JOptionPane.showInputDialog(frame, LanguageManager.getTranslationsFromFile("SelectLanguage"), LanguageManager.getTranslationsFromFile("Language"), JOptionPane.QUESTION_MESSAGE, null, LanguageManager.langs, LanguageManager.langs[LanguageManager.getCurrentLang()]);            
         if (s == null) return;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(new File(SysConst.getPrePath() + "conf" + File.separator + "language.txt")));
