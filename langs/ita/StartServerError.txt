@@ -1,0 +1,5 @@
+Si è verificato un errore durante l'avvio del server. 
+Verifica che:
+
+ 1. L'eseguibile Java inserito sia corretto
+ 2. La versione sia adeguata al server che si vuole eseguire

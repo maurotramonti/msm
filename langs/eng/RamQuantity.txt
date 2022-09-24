@@ -1,0 +1,1 @@
+RAM quantity (MB): 

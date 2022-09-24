@@ -1,0 +1,3 @@
+Questa operazione rimuoverà semplicemente il server dall'elenco.
+I file resterano salvati sul disco fisso. 
+Confermi?

@@ -1,0 +1,5 @@
+An error has occurred while starting the server. 
+Check that:
+
+ 1. The Java executable is correct
+ 2. Its version works with the chosen Minecraft version

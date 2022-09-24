@@ -1,0 +1,3 @@
+Sono disponibili aggiornamenti!
+Ultima versione disponibile su:
+https://github.com/maurotramonti/msm/releases/latest

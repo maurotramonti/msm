@@ -1,0 +1,2 @@
+Unable to check for updates!
+Check your internet connection or retry later.

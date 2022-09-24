@@ -1,0 +1,1 @@
+Il nome del server non può essere vuoto!
