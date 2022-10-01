@@ -32,6 +32,7 @@ You can get your copy by visiting the [release page](https://github.com/maurotra
 
 ## Known bugs
 
+ - **MSM-2**: ticking the option "Use default Java executable" in Import Server dialog will produce an error
  - **MSM-1**: when a server is created, but not started for the first time, the "Server Options" button won't make anything
  
 ## Contacts
