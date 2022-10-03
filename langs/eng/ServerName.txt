@@ -1,1 +1,1 @@
-Server name: 
+<html><b>Server name: </b></html>

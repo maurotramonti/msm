@@ -1,0 +1,1 @@
+https://api.papermc.io/v2/projects/paper/versions/1.19.2/builds/194/downloads/paper-1.19.2-194.jar

@@ -1,70 +1,40 @@
 package msm;
 
+import org.apache.commons.io.FileUtils;
+
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.event.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Scanner;
-import java.net.*;
+
 
 class SysConst {
     static final String system = System.getProperty("os.name");
-    public static String getPrePath() {
-        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") +  "\\msm\\";
-        else return "/etc/msm/";
+    public static String getConfPath() {
+        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") +  "\\msm\\conf\\";
+        else return "/etc/msm/conf/";
     }
-    public static String getLogoPath() {
-        if (system.contains("Windows")) return System.getenv("PROGRAMFILES") + "\\msm\\msm.png";
-        else return "/usr/share/icons/msm.png";
+
+    public static String getServersPath() {
+        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\servers\\";
+        else return "/etc/msm/images/";
     }
-    public static String getJavaLogoPath() {
-        if (system.contains("Windows")) return System.getenv("PROGRAMFILES") + "\\msm\\javalogo.png";
-        else return "/usr/share/icons/javalogo.png";
+    public static String getImagesPath() {
+        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\images\\";
+        else return "/etc/msm/images/";
+    }
+
+    public static String getLangsPath() {
+        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\langs\\";
+        else return "/etc/msm/langs/";
     }
 }
-
-class HelpMethods {
-    public static void downloadFile(String fileURL, String outFile) throws IOException {
-        URL url = new URL(fileURL);
-        InputStream is = url.openStream();
-        // Stream to the destionation file
-        FileOutputStream fos = new FileOutputStream(outFile);
-		// Read bytes from URL to the local file
-        byte[] buffer = new byte[4096];
-        int bytesRead = 0;
-
-        while ((bytesRead = is.read(buffer)) != -1) {
-        	fos.write(buffer, 0, bytesRead);
-        }
-
-        // Close destination stream
-        fos.close();
-        // Close URL stream
-        is.close();
-    }
-    public static void deleteDirectory(File file) {
-        // store all the paths of files and folders present
-        // inside directory
-        try {
-            for (File subfile : file.listFiles()) {
-  
-                // if it is a subfolder,e.g Rohan and Ritik,
-                // recursiley call function to empty subfolder
-                if (subfile.isDirectory()) {
-                    deleteDirectory(subfile);
-                }
-  
-                // delete files and empty subfolders
-                subfile.delete();
-            }
-            file.delete();
-        } catch (NullPointerException ex) {
-            return;
-        }
-    }
-}
-
 
 class MSMFrame extends JFrame implements WindowListener {
     public MSMFrame frame;
@@ -72,8 +42,7 @@ class MSMFrame extends JFrame implements WindowListener {
     public JTabbedPane tPane = new JTabbedPane();
     public ServerTab[] serverTabs = new ServerTab[32];
 
-    private JMenu server, preferences, help; 
-    private JMenuItem[] menuItems = new JMenuItem[11];
+    private final JMenuItem[] menuItems = new JMenuItem[12];
 
 
 
@@ -82,13 +51,14 @@ class MSMFrame extends JFrame implements WindowListener {
         frame = this;
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.setResizable(false);
-        this.setIconImage(Toolkit.getDefaultToolkit().getImage(SysConst.getLogoPath()));
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(SysConst.getImagesPath() + "msm.png"));
         this.addWindowListener(this);
+
 
         loadLanguage();
 
         try {
-            Scanner s = new Scanner(new File(SysConst.getPrePath() + "conf" + File.separator + "lastcheck.txt"));
+            Scanner s = new Scanner(new File(SysConst.getConfPath() + "lastcheck.txt"));
             final long millis = Long.parseLong(s.nextLine());
             s.close();
             if ((System.currentTimeMillis() - millis) >= 86400000) { // è passato almeno un giorno
@@ -101,25 +71,25 @@ class MSMFrame extends JFrame implements WindowListener {
 
         JMenuBar menuBar = new JMenuBar();
 
-        server = new JMenu("Server"); preferences = new JMenu(LanguageManager.getTranslationsFromFile("Preferences")); help = new JMenu(LanguageManager.getTranslationsFromFile("Help"));
+        JMenu server = new JMenu("Server"); JMenu preferences = new JMenu(LanguageManager.getTranslationsFromFile("Preferences")); JMenu help = new JMenu(LanguageManager.getTranslationsFromFile("Help"));
         menuBar.add(server); menuBar.add(preferences); menuBar.add(help);
 
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             menuItems[i] = new JMenuItem(menuItemLbls[i]);
             menuItems[i].setActionCommand(menuItemActs[i]);
             menuItems[i].addActionListener(new ServerMenuHandler());
             server.add(menuItems[i]);
         }
 
-        for (int i = 5; i < 6; i++) {
+        for (int i = 6; i < 7; i++) {
             menuItems[i] = new JMenuItem(menuItemLbls[i]);
             menuItems[i].setActionCommand(menuItemActs[i]);
             menuItems[i].addActionListener(new PreferencesMenuHandler());
             preferences.add(menuItems[i]);
         }
 
-        for (int i = 6; i < 10; i++) {
+        for (int i = 7; i < 12; i++) {
             menuItems[i] = new JMenuItem(menuItemLbls[i]);
             menuItems[i].setActionCommand(menuItemActs[i]);
             menuItems[i].addActionListener(new HelpMenuHandler());
@@ -130,8 +100,10 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
         this.add(tPane);
+        //this.setSize(new Dimension(400, 400));
         if (tPane.getTabCount() > 0) this.pack();
-            
+        else this.setSize(500, 500);
+
         this.setJMenuBar(menuBar);
         new MenuItemsController().start();
         
@@ -156,9 +128,7 @@ class MSMFrame extends JFrame implements WindowListener {
                 for (ServerTab st : serverTabs) {
                     try {
                         st.serverProcess.destroy(); 
-                    } catch (NullPointerException ex) {
-                        continue;
-                    }
+                    } catch (NullPointerException ex) {}
                 }
             
             }
@@ -189,28 +159,29 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
     public void loadServers() {
-        File serversFolder = new File(SysConst.getPrePath() + "servers");
+        File serversFolder = new File(SysConst.getServersPath());
     
         File[] servers = serversFolder.listFiles();
-        int i = 0;
-        
-        try {
+        if (servers != null) {
+
+            int i = 0;
             for (File s : servers) {
                 if (s.isDirectory()) {
                     serverTabs[i] = new ServerTab(new File(s.getAbsolutePath() + File.separator + "config.msm"), this);
                     tPane.addTab(serverTabs[i].title, new ImageIcon(new ImageIcon(serverTabs[i].iconPath).getImage().getScaledInstance(24, 24, Image.SCALE_DEFAULT)), serverTabs[i]);
-                    i++;                    
+                    i++;
                 }
-            } 
-        } catch (NullPointerException ex) {}
+            }
+        }
+
         if (tPane.getTabCount() == 0) this.setSize(400, 400);
     } 
 
     public void checkUpdates(boolean showOnlyIfPositive) {
         final int internalVersion = 100;
         try {
-            HelpMethods.downloadFile("https://raw.githubusercontent.com/maurotramonti/msm/main/latest.txt", SysConst.getPrePath() + "conf" + File.separator + "latest.txt");
-            Scanner scanner = new Scanner(new File(SysConst.getPrePath() + "conf" + File.separator + "latest.txt"));
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/latest.txt"), new File(SysConst.getConfPath() + "latest.txt"), 30000,30000);
+            Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "latest.txt"));
             final int readVersion = Integer.parseInt(scanner.nextLine());
             System.out.println(readVersion);
             if (readVersion > internalVersion) {
@@ -220,17 +191,17 @@ class MSMFrame extends JFrame implements WindowListener {
             }
             scanner.close();
 
-            HelpMethods.downloadFile("https://raw.githubusercontent.com/maurotramonti/msm/main/paperlink.txt", SysConst.getPrePath() + "conf" + File.separator + "paperlink.txt");
-            HelpMethods.downloadFile("https://raw.githubusercontent.com/maurotramonti/msm/main/vanillalink.txt", SysConst.getPrePath() + "conf" + File.separator + "vanillalink.txt");
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/paperlink.txt"), new File(SysConst.getConfPath() + "paperlink.txt"), 30000,30000);
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/vanillalink.txt"), new File(SysConst.getConfPath() + "vanillalink.txt"), 30000,30000);
 
-            File lastcheckfile = new File(SysConst.getPrePath() + "conf" + File.separator + "lastcheck.txt");
+            File lastcheckfile = new File(SysConst.getConfPath() + "lastcheck.txt");
             BufferedWriter bw = new BufferedWriter(new FileWriter(lastcheckfile));
             bw.write(Long.toString(System.currentTimeMillis()));
             bw.close();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, LanguageManager.getTranslationsFromFile("CheckUpdatesErr"), LanguageManager.getTranslationsFromFile("Warning"), JOptionPane.ERROR_MESSAGE);
-            return;
-        }       
+            ex.printStackTrace();
+        }
         
     }
 
@@ -238,7 +209,7 @@ class MSMFrame extends JFrame implements WindowListener {
 
     private void loadLanguage() {
         try {
-            Scanner scanner = new Scanner(new File(SysConst.getPrePath() + "conf" + File.separator + "language.txt"));
+            Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "language.txt"));
             String s = scanner.nextLine();
             if (s.equals("none")) {
                 scanner.close();
@@ -257,17 +228,21 @@ class MSMFrame extends JFrame implements WindowListener {
     class MenuItemsController extends Thread {
         @Override
         public void run() {
-            while (Thread.currentThread().isInterrupted() == false) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     if (tPane.getTabCount() == 0) {
                         menuItems[1].setEnabled(false);
                         menuItems[4].setEnabled(false);
-                    } else if (((ServerTab) tPane.getSelectedComponent()).running)  {
-                        menuItems[1].setEnabled(false);
-                        menuItems[4].setEnabled(false);
+                        menuItems[5].setEnabled(false);
                     } else {
-                        menuItems[1].setEnabled(true);
-                        menuItems[4].setEnabled(true);
+                        if (((ServerTab) tPane.getSelectedComponent()).running) {
+                            menuItems[1].setEnabled(false);
+                            menuItems[4].setEnabled(false);
+                        } else {
+                            menuItems[1].setEnabled(true);
+                            menuItems[4].setEnabled(true);
+                        }
+                        menuItems[5].setEnabled(true);
                     }
 
                     if (tPane.getTabCount() > 0) {
@@ -275,7 +250,7 @@ class MSMFrame extends JFrame implements WindowListener {
                             menuItems[3].setEnabled(true);
                         } else menuItems[3].setEnabled(false);
                     }
-                    this.sleep(500);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                     break;
                 }

@@ -1,35 +1,30 @@
 package msm;
 
+import org.apache.commons.io.FileUtils;
+
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import javax.swing.event.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
-import javax.swing.filechooser.*;
-import java.net.*;
+import java.net.URL;
 import java.util.Scanner;
 
 
 class CreateServerDialog extends JDialog {
-    private MSMFrame parentFrame;
-    private JDialog dialog;
+    private final MSMFrame parentFrame;
+    private final JDialog dialog;
 
-    private JPanel contents, buttons;
+    private final JTextField nameInput, javaExeInput, iconInput;
+    private final JSlider ramInput;
 
-    private JTextField nameInput, javaExeInput, iconInput;
-    private JSlider ramInput;
-
-    private CreateServerDialog.JRECheckBox jreCheckBox;
-    private CreateServerDialog.JREFileBrowser jreFileBrowser;
+    private final CreateServerDialog.JRECheckBox jreCheckBox;
+    private final CreateServerDialog.JREFileBrowser jreFileBrowser;
 
     private CreateServerDialog.CreatingServerDialog csd;
 
-    private JComboBox mcver, servertype;
-
-    private final String[] availversions = {"1.19"};
-    private final String[] availableservers = {"Vanilla", "PaperMC"};    
-
-
+    private final JComboBox<String> mcver, servertype;
     CreateServerDialog(MSMFrame parent) {
         super(parent, LanguageManager.getTranslationsFromFile("CreateServer"), true);
         parentFrame = parent;
@@ -41,8 +36,8 @@ class CreateServerDialog extends JDialog {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
-        contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
-        buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
+        JPanel contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
+        JPanel buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
 
         buttons.add(new CreateServerDialog.CancelButton()); buttons.add(new CreateServerDialog.ConfirmButton());
 
@@ -72,14 +67,18 @@ class CreateServerDialog extends JDialog {
         jreCheckBox = new CreateServerDialog.JRECheckBox(); contents.add(jreCheckBox, gbc);
 
         gbc.insets = new Insets(10, 10, 10, 10); gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 1;
-        iconInput = new JTextField(30); contents.add(iconInput, gbc);
+        iconInput = new JTextField(30); iconInput.setToolTipText(LanguageManager.getTranslationsFromFile("ServerIconTooltip")); contents.add(iconInput, gbc);
 
         gbc.gridx = 2; contents.add(new CreateServerDialog.IconFileBrowser(), gbc);
 
         ramInput = new JSlider(800, 2000, 1500); ramInput.setBackground(Color.white); ramInput.setMajorTickSpacing(200); ramInput.setMinorTickSpacing(50);ramInput.setPaintLabels(true); ramInput.setPaintTicks(true);
         gbc.gridy = 4; gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL; contents.add(ramInput, gbc);
 
-        gbc.gridy = 5; gbc.gridx = 2; gbc.gridwidth = 1; 
+        gbc.gridy = 5; gbc.gridx = 2; gbc.gridwidth = 1;
+
+        final String[] availversions = {"1.19"};
+        final String[] availableservers = {"Vanilla", "PaperMC"};
+
         mcver = new JComboBox<String>(availversions); contents.add(mcver, gbc);
         gbc.gridx = 1; 
         servertype = new JComboBox<String>(availableservers); contents.add(servertype, gbc);
@@ -141,9 +140,6 @@ class CreateServerDialog extends JDialog {
 
             this.pack();
 
-
-            
-
         }
     }
 
@@ -161,17 +157,17 @@ class CreateServerDialog extends JDialog {
                 csd.dispose();
                 return;
             }
-            if (javaExeInput.getText().equals("") && jreCheckBox.isSelected() == false) {
+            if (javaExeInput.getText().equals("") && !jreCheckBox.isSelected()) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 csd.dispose();
                 return;
             }
-            if (jreCheckBox.isSelected() == false && ((System.getProperty("os.name").contains("Windows") && javaExeInput.getText().endsWith(".exe") == false) || new File(javaExeInput.getText()).exists() == false)) {
+            if (!jreCheckBox.isSelected() && ((System.getProperty("os.name").contains("Windows") && !javaExeInput.getText().endsWith(".exe")) || new File(javaExeInput.getText()).exists() == false)) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("BadJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 csd.dispose();
                 return;
             }
-            String newServerFolder = SysConst.getPrePath() + "servers" + File.separator + nameInput.getText().replaceAll(" ", "");
+            String newServerFolder = SysConst.getServersPath() + nameInput.getText().replaceAll(" ", "");
             File serverFolder = new File(newServerFolder);
             boolean success = serverFolder.mkdir();
             if (!success) {
@@ -187,7 +183,7 @@ class CreateServerDialog extends JDialog {
                 bw.write(iconInput.getText() + '\n');
                 bw.write(newServerFolder + '\n');
                 bw.write((String) mcver.getSelectedItem() + '\n');
-                if (jreCheckBox.isSelected() == false) {
+                if (!jreCheckBox.isSelected()) {
                     bw.write(javaExeInput.getText() + '\n');
                 } else {
                     String javaHome = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
@@ -203,15 +199,15 @@ class CreateServerDialog extends JDialog {
 
                 csd.statusLabel.setText(LanguageManager.getTranslationsFromFile("DownloadingServer"));
 
-                String urlString = new String();
+                String urlString = "";
                 try {
                     if (((String) servertype.getSelectedItem()).equals("Vanilla")) {
-                        Scanner scanner = new Scanner(new File(SysConst.getPrePath() + "conf" + File.separator + "vanillalink.txt"));
+                        Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "vanillalink.txt"));
                         if (((String) mcver.getSelectedItem()).equals("1.19")) {
                             urlString = scanner.nextLine();
                         }
                     } else if (((String) servertype.getSelectedItem()).equals("PaperMC")) {
-                        Scanner scanner = new Scanner(new File(SysConst.getPrePath() + "conf" + File.separator + "paperlink.txt"));
+                        Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "paperlink.txt"));
                         if (((String) mcver.getSelectedItem()).equals("1.19")) {
                             while (scanner.hasNextLine()) {
                                 String s = scanner.nextLine();
@@ -223,14 +219,14 @@ class CreateServerDialog extends JDialog {
                     }
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("CreatingServerError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                    FileUtils.delete(serverFolder);
                     csd.dispose();
                     return;
                 }
 
-                HelpMethods.downloadFile(urlString, newServerFolder + File.separator + "server.jar");
-
+                FileUtils.copyURLToFile(new URL(urlString), new File(newServerFolder + File.separator + "server.jar"), 30000,30000);
                 File iconFile = new File(iconInput.getText());
-                if (iconFile.exists()) copyFile(iconFile, new File(newServerFolder + File.separator + "server-icon.png"));
+                if (iconFile.exists()) FileUtils.copyFile(iconFile, new File(newServerFolder + File.separator + "server-icon.png"));
 
                 
                 int index = parentFrame.tPane.getTabCount();
@@ -249,33 +245,16 @@ class CreateServerDialog extends JDialog {
 
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("CreatingServerError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+                try {
+                    FileUtils.deleteDirectory(serverFolder);
+                } catch (IOException exc) {}
                 csd.dispose();
                 return;
             }
 
             csd.dispose();
             dialog.dispose();
-        }
-    }
-
-    private void copyFile(File source, File dest) throws IOException {
-        InputStream is = null;
-        OutputStream os = null;
-
-        try {
-            is = new FileInputStream(source);
-            os = new FileOutputStream(dest);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                os.write(buffer, 0, length);
-            }
-        } 
-        finally {
-
-            is.close();
-            os.close();
-
         }
     }
     

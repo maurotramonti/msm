@@ -1,33 +1,28 @@
 package msm;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import javax.swing.event.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
-import javax.swing.filechooser.*;
-import java.net.*;
 import java.util.Scanner;
 
 
 class EditServerDialog extends JDialog {
-    private MSMFrame parentFrame;
-    private JDialog dialog;
+    private final JDialog dialog;
 
-    private String serverFolder;
-    private ServerTab currentTab;
-
-    private JPanel contents, buttons;
+    private final String serverFolder;
+    private final ServerTab currentTab;
 
     private JTextField nameInput, javaExeInput, iconInput;
-    private JSlider ramInput;
+    private final JSlider ramInput;
 
-    private EditServerDialog.JRECheckBox jreCheckBox;
-    private EditServerDialog.JREFileBrowser jreFileBrowser;
+    private final EditServerDialog.JRECheckBox jreCheckBox;
+    private final EditServerDialog.JREFileBrowser jreFileBrowser;
 
     EditServerDialog(MSMFrame parent, ServerTab currentTab) {
         super(parent, LanguageManager.getTranslationsFromFile("EditServer"), true);
-        parentFrame = parent;
         dialog = this;
         this.setLayout(new BorderLayout());
         this.setSize(400, 300);
@@ -47,39 +42,43 @@ class EditServerDialog extends JDialog {
 
         GridBagConstraints gbc = new GridBagConstraints();
 
-        contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
-        buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
+        JPanel contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
+        JPanel buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
 
         buttons.add(new EditServerDialog.CancelButton()); buttons.add(new EditServerDialog.ConfirmButton());
 
         this.add(contents, BorderLayout.NORTH); this.add(buttons, BorderLayout.SOUTH);
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.insets = new Insets(10, 10, 10, 10); gbc.anchor = GridBagConstraints.LINE_START;
+        contents.add(new JLabel(LanguageManager.getTranslationsFromFile("Name")), gbc);
+        gbc.gridy = 1;
         contents.add(new JLabel(LanguageManager.getTranslationsFromFile("JavaPath")), gbc);
 
 
-        gbc.gridy = 2; contents.add(new JLabel(LanguageManager.getTranslationsFromFile("ServerIcon")), gbc);
-        gbc.gridy = 3; contents.add(new JLabel(LanguageManager.getTranslationsFromFile("RamQuantity")), gbc);
+        gbc.gridy = 3; contents.add(new JLabel(LanguageManager.getTranslationsFromFile("ServerIcon")), gbc);
+        gbc.gridy = 4; contents.add(new JLabel(LanguageManager.getTranslationsFromFile("RamQuantity")), gbc);
 
-        scanner.nextLine();
-        iconInput = new JTextField(scanner.nextLine(), 30);
+        nameInput = new JTextField(scanner.nextLine(), 18);
+        iconInput = new JTextField(scanner.nextLine(), 30); iconInput.setToolTipText(LanguageManager.getTranslationsFromFile("ServerIconTooltip"));
         scanner.nextLine(); scanner.nextLine(); 
         javaExeInput = new JTextField(scanner.nextLine(), 30);
-        gbc.gridx = 1; gbc.gridy = 0; contents.add(javaExeInput, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 0; contents.add(nameInput);
+        gbc.gridy = 1; contents.add(javaExeInput, gbc);
 
         jreFileBrowser = new EditServerDialog.JREFileBrowser();
         gbc.gridx = 2; contents.add(jreFileBrowser, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1; gbc.gridwidth = 2; gbc.insets = new Insets(0, 10, 10, 10); 
+        gbc.gridx = 1; gbc.gridy = 2; gbc.gridwidth = 2; gbc.insets = new Insets(0, 10, 10, 10);
         jreCheckBox = new EditServerDialog.JRECheckBox(); contents.add(jreCheckBox, gbc);
 
-        gbc.insets = new Insets(10, 10, 10, 10); gbc.gridx = 1; gbc.gridy = 2; gbc.gridwidth = 1;
+        gbc.insets = new Insets(10, 10, 10, 10); gbc.gridx = 1; gbc.gridy = 3; gbc.gridwidth = 1;
         contents.add(iconInput, gbc);
 
         gbc.gridx = 2; contents.add(new EditServerDialog.IconFileBrowser(), gbc);
 
         ramInput = new JSlider(800, 2000, Integer.parseInt(scanner.nextLine())); ramInput.setBackground(Color.white); ramInput.setMajorTickSpacing(200); ramInput.setMinorTickSpacing(50);ramInput.setPaintLabels(true); ramInput.setPaintTicks(true);
-        gbc.gridy = 3; gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL; contents.add(ramInput, gbc);
+        gbc.gridy = 4; gbc.gridx = 1; gbc.gridwidth = 2; gbc.fill = GridBagConstraints.HORIZONTAL; contents.add(ramInput, gbc);
 
         scanner.close();
 
@@ -108,33 +107,37 @@ class EditServerDialog extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (nameInput.getText().replaceAll(" ", "").equals("")) {
-                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptySerevrName"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyServerName"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (javaExeInput.getText().equals("") && jreCheckBox.isSelected() == false) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (jreCheckBox.isSelected() == false && ((System.getProperty("os.name").contains("Windows") && javaExeInput.getText().endsWith(".exe") == false) || new File(javaExeInput.getText()).exists() == false)) {
+            if (!jreCheckBox.isSelected() && ((System.getProperty("os.name").contains("Windows") && !javaExeInput.getText().endsWith(".exe")) || new File(javaExeInput.getText()).exists() == false)) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("BadJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
             File configFile = new File(serverFolder + File.separator + "config.msm");
             try {
+
                 Scanner s = new Scanner(configFile);
                 String[] existingSettings = new String[8];
                 for (int i = 0; i < 8; i++) {
                     existingSettings[i] = s.nextLine();
-                    if (existingSettings[i].endsWith("\n") == false) existingSettings[i] = new String(existingSettings[i] + '\n');
+                    if (!existingSettings[i].endsWith("\n")) existingSettings[i] = new String(existingSettings[i] + '\n');
                 }
                 s.close();
-                copyFile(new File(iconInput.getText()), new File(serverFolder + File.separator + "server-icon.png"));
+                if (!new File(serverFolder).renameTo(new File(new File(serverFolder).getParent() + File.separator + nameInput.getText()))) throw new IOException("Cannot rename server's folder.");
+                configFile = new File(new File(serverFolder).getParent() + File.separator + nameInput.getText() + File.separator + "config.msm");
+                File iconFile = new File(iconInput.getText());
+                if (iconFile.exists()) copyFile(iconFile, new File(configFile.getParent() + File.separator + "server-icon.png"));
                 BufferedWriter bw = new BufferedWriter(new FileWriter(configFile));
-                bw.write(existingSettings[0]); 
+                bw.write(nameInput.getText() + '\n');
                 bw.write(iconInput.getText() + '\n');
-                bw.write(existingSettings[2]);
+                bw.write(configFile.getParent() + '\n');
                 bw.write(existingSettings[3]);
-                if (jreCheckBox.isSelected() == false) {
+                if (!jreCheckBox.isSelected()) {
                     bw.write(javaExeInput.getText() + '\n');
                 } else {
                     String javaHome = new String(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
@@ -142,13 +145,17 @@ class EditServerDialog extends JDialog {
                     bw.write(javaHome + '\n');
                 }
                 bw.write(Integer.toString(ramInput.getValue()) + '\n');
+                bw.write(existingSettings[6]);
                 bw.write(existingSettings[7]);
                 bw.close(); 
 
+
+                currentTab.confFile = configFile;
                 currentTab.reload();
 
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EditError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             } finally {
                 dialog.dispose();
             }
@@ -222,7 +229,7 @@ class EditServerDialog extends JDialog {
 
     class IconFileBrowser extends JButton implements ActionListener {
         IconFileBrowser() {
-            super("Sfoglia...");
+            super(LanguageManager.getTranslationsFromFile("Browse"));
             setBackground(Color.white);
             addActionListener(this);
         }

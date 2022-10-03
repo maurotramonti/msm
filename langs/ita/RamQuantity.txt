@@ -1,1 +1,1 @@
-Quantitativo di RAM (in MB): 
+<html><b>Quantitativo di RAM (in MB): </b></html>

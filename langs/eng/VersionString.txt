@@ -1,3 +1,3 @@
-MSM 1.0 (build 240922)
+MSM 1.1 (build 031022)
 Author: Mauro Tramonti
 officialmsm@outlook.com

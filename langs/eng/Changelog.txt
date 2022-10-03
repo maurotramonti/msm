@@ -1,0 +1,2 @@
+<html><h3> Changes in version 1.1 </h3></html>
+<html><ul><li>Bug fixing (<b>MSM-1, MSM-2</b>)</li><li>Now, it's possible to take a backup of your servers</li><li>Now, you can add plugins to your server easily</li><li>Now, you can update your server's jar file directly in-app</li></ul></html>

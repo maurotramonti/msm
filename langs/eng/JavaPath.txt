@@ -1,1 +1,1 @@
-Java path: 
+<html><b>Java path: </b></html>

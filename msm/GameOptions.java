@@ -2,16 +2,18 @@ package msm;
 
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.event.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
 
 class GameOptionsDialog extends JDialog {
-    JDialog dialog;
-    
-    JPanel buttons, contents;
+    final JDialog dialog;
+
 
     String currentGamemode, currentDifficulty;
     final File serverProperties;
@@ -22,16 +24,15 @@ class GameOptionsDialog extends JDialog {
 
     final int GAMEMODE_INDEX = 5; final int DIFFICULTY_INDEX = 16; final int PVP_INDEX = 13; final int MOTD_INDEX = 11; final int PLAYERS_INDEX = 21; final int FLIGHT_INDEX = 24;
 
-    JSpinner playerNumber; 
-    JComboBox difficulty, gamemode;
-    JCheckBox pvp = new JCheckBox(), flight = new JCheckBox();
-    JTextField serverDescr = new JTextField();
+    JSpinner playerNumber;
+    JComboBox<String> difficulty, gamemode;
+    final JCheckBox pvp = new JCheckBox(), flight = new JCheckBox();
+    final JTextField serverDescr = new JTextField();
 
-    private final String[] difficulties = {"peaceful", "easy", "normal", "hard"};
-    private final String[] gamemodes = {"creative", "survival", "adventure"};
+
 
     GameOptionsDialog(MSMFrame parent) {
-        super(parent, LanguageManager.getTranslationsFromFile("ServerOptions"), true);
+        super(parent, LanguageManager.getTranslationsFromFile("GameOptions"), true);
         dialog = this;
         this.setLayout(new BorderLayout());
         this.setResizable(false);
@@ -39,8 +40,8 @@ class GameOptionsDialog extends JDialog {
 
         serverProperties = new File(((ServerTab) parent.tPane.getSelectedComponent()).folder + File.separator + "server.properties");
 
-        contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
-        buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
+        JPanel contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
+        JPanel buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
 
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -74,8 +75,12 @@ class GameOptionsDialog extends JDialog {
         playerNumber = new JSpinner(new SpinnerNumberModel(currentPlayers, 1, 100, 1));
         gbc.gridy = 0; gbc.gridx = 1; gbc.gridwidth = 1; contents.add(playerNumber);
 
+        final String[] difficulties = {"peaceful", "easy", "normal", "hard"};
+
         difficulty = new JComboBox<String>(difficulties); difficulty.setSelectedItem(currentDifficulty);
         gbc.gridy = 1; contents.add(difficulty, gbc);
+
+        final String[] gamemodes = {"creative", "survival", "adventure"};
 
         gamemode = new JComboBox<String>(gamemodes); gamemode.setSelectedItem(currentGamemode);
         gbc.gridy = 2; contents.add(gamemode, gbc);

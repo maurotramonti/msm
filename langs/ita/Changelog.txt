@@ -1,0 +1,3 @@
+<html><h3> Cambiamenti versione 1.1 </h3></html>
+<html><ul><li>Correzione di bug (<b>MSM-1, MSM-2</b>)</li><li>Ora, è possibile eseguire il backup dei tuoi server</li><li>Ora, puoi aggiungere plug-in al tuo server con facilità</li><li>Ora, puoi aggiornare il file jar del tuo server direttamente in app</li></ul></html>
+

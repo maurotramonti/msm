@@ -1,32 +1,30 @@
 package msm;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import javax.swing.event.*;
-import java.awt.event.*;
-import java.io.*;
-import javax.swing.filechooser.*;
-import java.net.*;
-import java.util.Scanner;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 class ImportServerDialog extends JDialog {
-    private MSMFrame parentFrame;
-    private JDialog dialog; 
+    private final MSMFrame parentFrame;
+    private final JDialog dialog;
 
-    private JPanel buttons, contents;
+    private final JTextField nameInput, javaExeInput, serverJarInput;
+    private final JSlider ramInput;
 
-    private JTextField nameInput, javaExeInput, serverJarInput;
-    private JSlider ramInput;
+    private final JComboBox<String> mcver, servertype;
 
-    private JComboBox mcver, servertype;
-
-    private ImportServerDialog.JRECheckBox jreCheckBox;
-    private ImportServerDialog.JREFileBrowser jreFileBrowser;
+    private final ImportServerDialog.JRECheckBox jreCheckBox;
+    private final ImportServerDialog.JREFileBrowser jreFileBrowser;
 
 
-    private final String[] availversions = {"1.19"};
-    private final String[] availableservers = {"Vanilla", "PaperMC"};  
+
 
 
     ImportServerDialog(MSMFrame parent) {
@@ -37,8 +35,8 @@ class ImportServerDialog extends JDialog {
         this.setResizable(false);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
-        contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
+        JPanel buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
+        JPanel contents = new JPanel(new GridBagLayout()); contents.setBackground(Color.white);
 
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -69,6 +67,9 @@ class ImportServerDialog extends JDialog {
 
         ramInput = new JSlider(800, 2000, 1500); ramInput.setBackground(Color.white); ramInput.setMajorTickSpacing(200); ramInput.setMinorTickSpacing(50);ramInput.setPaintLabels(true); ramInput.setPaintTicks(true);
         gbc.gridy = 4; contents.add(ramInput, gbc);
+
+        final String[] availversions = {"1.19"};
+        final String[] availableservers = {"Vanilla", "PaperMC"};
 
         gbc.gridy = 5; gbc.gridx = 2; gbc.gridwidth = 1; 
         mcver = new JComboBox<String>(availversions); contents.add(mcver, gbc);
@@ -121,19 +122,20 @@ class ImportServerDialog extends JDialog {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyServerPath"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            if (javaExeInput.getText().equals("") && jreCheckBox.isSelected() == false) {
-                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if ((System.getProperty("os.name").contains("Windows") && javaExeInput.getText().endsWith(".exe") == false) || new File(javaExeInput.getText()).exists() == false) {
-                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("BadJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (serverJarInput.getText().endsWith(".jar") == false || new File(serverJarInput.getText()).exists() == false) {
+            if (!serverJarInput.getText().endsWith(".jar") || !new File(serverJarInput.getText()).exists()) {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("BadServerFile"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String newServerFolder = SysConst.getPrePath() + "servers" + File.separator + nameInput.getText().replaceAll(" ", "");
+            if (javaExeInput.getText().equals("") && !jreCheckBox.isSelected()) {
+                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("EmptyJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if ((System.getProperty("os.name").contains("Windows") && (!jreCheckBox.isSelected() && !javaExeInput.getText().endsWith(".exe"))) || !new File(javaExeInput.getText()).exists()) {
+                JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("BadJavaExec"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String newServerFolder = SysConst.getServersPath() + nameInput.getText().replaceAll(" ", "");
             String originalServerFolder = (new File(serverJarInput.getText()).getParent());
             File serverFolder = new File(newServerFolder);
             boolean success = serverFolder.mkdir();
@@ -141,15 +143,13 @@ class ImportServerDialog extends JDialog {
                 JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("CannotCreateDir"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
                 dialog.dispose();
                 return;
-            } 
-
-            File oldServerFile = new File(serverJarInput.getText());
-            File newServerFile = new File(oldServerFile.getParent() + File.separator + "server.jar");
-
-            oldServerFile.renameTo(newServerFile);
+            }
 
             File configFile = new File(newServerFolder + File.separator + "config.msm");
             try {
+                File oldServerFile = new File(serverJarInput.getText());
+                File newServerFile = new File(oldServerFile.getParent() + File.separator + "server.jar");
+                if(!oldServerFile.renameTo(newServerFile)) throw new IOException("Unable to rename the server file.");
                 BufferedWriter bw = new BufferedWriter(new FileWriter(configFile));
                 bw.write(nameInput.getText() + '\n');
                 if (new File(originalServerFolder + File.separator + "server-icon.png").exists()) {
@@ -157,12 +157,12 @@ class ImportServerDialog extends JDialog {
                 } else bw.write("\n");                
                 bw.write(originalServerFolder + '\n');
                 bw.write((String) mcver.getSelectedItem() + '\n');
-                if (jreCheckBox.isSelected() == false) {
+                if (!jreCheckBox.isSelected()) {
                     bw.write(javaExeInput.getText() + '\n');
                 } else {
                     String javaHome = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
                     if (System.getProperty("os.name").contains("Windows")) javaHome = new String(javaHome + ".exe");
-                    bw.write(javaHome + '\n'); 
+                    bw.write(javaHome + '\n');
                 }
             
                 bw.write(Integer.toString(ramInput.getValue()) + '\n');

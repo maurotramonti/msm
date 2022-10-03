@@ -1,1 +1,1 @@
-Server path: 
+<html><b>Server path: </b></html>

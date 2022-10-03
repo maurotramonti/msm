@@ -1,11 +1,8 @@
 package msm;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.event.*;
-import javax.swing.filechooser.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 class LanguageManager extends MSM {
@@ -20,40 +17,44 @@ class LanguageManager extends MSM {
     private static int lang;
 
     public static String[] getMenuItemsInfo(int typeOfInfo) {
+        String[] tmp = new String[12];
         if (typeOfInfo == MI_ACTS) {
-            String[] tmp = {"New server", "Edit server", "Import server...", "Remove server", "Delete server", "Language", "Check updates", "About MSM", "About Java", "Report bug"};           
-            return tmp;
+            tmp = new String[]{"New server", "Edit server", "Import server...", "Remove server", "Delete server", "Make backup", "Language", "Check updates", "About MSM", "About Java", "Report bug", "Changelog"};
         } else if (typeOfInfo == MI_LBLS) {              
-            String[] tmp = {getTranslationsFromFile("NewServer", lang), getTranslationsFromFile("EditServer", lang), getTranslationsFromFile("ImportServer", lang), getTranslationsFromFile("RemoveServer", lang), getTranslationsFromFile("DeleteServer", lang), getTranslationsFromFile("Language", lang), getTranslationsFromFile("CheckUpdates", lang), getTranslationsFromFile("AboutMSM", lang), getTranslationsFromFile("AboutJava", lang), getTranslationsFromFile("ReportBug", lang)};
-            return tmp;
-        } else return null;
+            tmp = new String[]{getTranslationsFromFile("NewServer", lang), getTranslationsFromFile("EditServer", lang), getTranslationsFromFile("ImportServer", lang), getTranslationsFromFile("RemoveServer", lang), getTranslationsFromFile("DeleteServer", lang), getTranslationsFromFile("MakeBackup"), getTranslationsFromFile("Language", lang), getTranslationsFromFile("CheckUpdates", lang), getTranslationsFromFile("AboutMSM", lang), getTranslationsFromFile("AboutJava", lang), getTranslationsFromFile("ReportBug", lang), "Changelog"};
+        }
+        return tmp;
     }
     public static String getTranslationsFromFile(String property) {
         return getTranslationsFromFile(property, getCurrentLang());
     }
 
     public static String getTranslationsFromFile(String property, int lang) {
-        String prefix, contents = "";
+        String prefix = "", contents = "Missing translations.";
         switch (lang) {
-            case 0: 
-                prefix = SysConst.getPrePath() + File.separator + "langs" + File.separator + "eng" + File.separator;
+            case 0:
+                prefix = SysConst.getLangsPath() + "eng" + File.separator;
                 break;
             case 1:
-                prefix = SysConst.getPrePath() + File.separator + "langs" + File.separator + "ita" + File.separator;
-                break;
-            default:
-                prefix = SysConst.getPrePath() + File.separator + "langs" + File.separator + "eng" + File.separator;
+                prefix = SysConst.getLangsPath() + "ita" + File.separator;
                 break;
         }
         try {
             File lf = new File(prefix + property + ".txt");
-            Scanner s = new Scanner(lf);
+            Scanner s = new Scanner(lf, "UTF-8");
+            contents = "";
             do {
                 contents = contents + s.nextLine() + '\n';
             } while (s.hasNextLine());
             s.close();
         } catch (FileNotFoundException e) {
-            System.out.println("Missing translation: " + property + ".txt");
+            JFrame frame;
+            try {
+                frame = getMSMFrame().frame;
+            } catch (NullPointerException ex){
+                frame = null;
+            }
+            JOptionPane.showMessageDialog(frame, LanguageManager.getTranslationsFromFile("MissingTranslation") + property + ".txt", LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
         }
         return contents;
     }
