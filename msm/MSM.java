@@ -23,7 +23,7 @@ class SysConst {
 
     public static String getServersPath() {
         if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\servers\\";
-        else return "/etc/msm/images/";
+        else return "/etc/msm/servers/";
     }
     public static String getImagesPath() {
         if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\images\\";
@@ -47,7 +47,7 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
     MSMFrame() {
-        super("Minecraft Server Manager 1.0");
+        super("Minecraft Server Manager 1.1");
         frame = this;
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.setResizable(false);
