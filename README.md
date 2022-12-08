@@ -16,6 +16,8 @@ The standard procedure could be difficult for people who hasn't experience in co
  - Create and customize your servers with image, players number, difficulty, and all the other options!
  - Choose your preferred version and your favourite software: Vanilla or PaperMC!
  - Read the console and send commands easily!
+ - Install your favourite plugins!
+ - Take backups of your worlds!
  - And... take a look at the next part...
  
 ## Features to be implemented
@@ -23,8 +25,6 @@ The standard procedure could be difficult for people who hasn't experience in co
  - More game options
  - More Minecraft versions and softwares
  - Minecraft: Bedrock Edition servers
- - Plugins
- - Backups
  
 ## Downloads
 
@@ -32,8 +32,8 @@ You can get your copy by visiting the [release page](https://github.com/maurotra
 
 ## Known bugs
 
- - **MSM-2**: ticking the option "Use default Java executable" in Import Server dialog will produce an error
- - **MSM-1**: when a server is created, but not started for the first time, the "Server Options" button won't make anything
+ - ~~**MSM-2**: ticking the option "Use default Java executable" in Import Server dialog will produce an error~~
+ - ~~**MSM-1**: when a server is created, but not started for the first time, the "Server Options" button won't make anything~~
  
 ## Contacts
 
