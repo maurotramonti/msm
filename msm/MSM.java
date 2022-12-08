@@ -173,7 +173,7 @@ class MSMFrame extends JFrame implements WindowListener {
     } 
 
     public void checkUpdates(boolean showOnlyIfPositive) {
-        final int internalVersion = 100;
+        final int internalVersion = 120;
         try {
             FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/conf/latest.txt"), new File(SysConst.getConfPath() + "latest.txt"), 30000,30000);
             Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "latest.txt"));
