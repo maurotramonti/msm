@@ -7,10 +7,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Scanner;
-
 
 class CreateServerDialog extends JDialog {
     private final MSMFrame parentFrame;
@@ -24,7 +28,7 @@ class CreateServerDialog extends JDialog {
 
     private CreateServerDialog.CreatingServerDialog csd;
 
-    private final JComboBox<String> mcver, servertype;
+    private JComboBox<String> mcver, servertype;
     CreateServerDialog(MSMFrame parent) {
         super(parent, LanguageManager.getTranslationsFromFile("CreateServer"), true);
         parentFrame = parent;
@@ -76,13 +80,20 @@ class CreateServerDialog extends JDialog {
 
         gbc.gridy = 5; gbc.gridx = 2; gbc.gridwidth = 1;
 
-        final String[] availversions = {"1.19"};
+        final String[] availversions = {"1.19.3"};
         final String[] availableservers = {"Vanilla", "PaperMC"};
 
         mcver = new JComboBox<String>(availversions); contents.add(mcver, gbc);
         gbc.gridx = 1; 
         servertype = new JComboBox<String>(availableservers); contents.add(servertype, gbc);
-
+        servertype.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                JComboBox<String> cb = (JComboBox<String>) e.getSource();
+                if (((String) cb.getSelectedItem()).equals("Vanilla")) mcver.setModel(new DefaultComboBoxModel<>(new String[]{"1.19.3"}));
+                else if (((String) cb.getSelectedItem()).equals("PaperMC")) mcver.setModel(new DefaultComboBoxModel<>(new String[]{"1.19.2"}));
+            }
+        });
 
 
         this.pack();
@@ -91,8 +102,8 @@ class CreateServerDialog extends JDialog {
 
     class CancelButton extends JButton implements ActionListener {
         CancelButton() {
-            super("Annulla");
-            addActionListener(this);
+            super(LanguageManager.getTranslationsFromFile("Cancel"));
+            addActionListener(this); setBackground(Color.white);
         }
 
         @Override
@@ -103,8 +114,8 @@ class CreateServerDialog extends JDialog {
 
     class ConfirmButton extends JButton implements ActionListener {
         ConfirmButton() {
-            super("Conferma");
-            addActionListener(this);
+            super(LanguageManager.getTranslationsFromFile("Submit"));
+            addActionListener(this); setBackground(Color.white);
         }
 
         @Override
@@ -180,7 +191,8 @@ class CreateServerDialog extends JDialog {
             try {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(configFile));
                 bw.write(nameInput.getText() + '\n');
-                bw.write(iconInput.getText() + '\n');
+                if (!iconInput.getText().equals("")) bw.write(iconInput.getText() + '\n');
+                else bw.write(SysConst.getImagesPath() + "default_icon.jpg\n");
                 bw.write(newServerFolder + '\n');
                 bw.write((String) mcver.getSelectedItem() + '\n');
                 if (!jreCheckBox.isSelected()) {
@@ -203,15 +215,19 @@ class CreateServerDialog extends JDialog {
                 try {
                     if (((String) servertype.getSelectedItem()).equals("Vanilla")) {
                         Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "vanillalink.txt"));
-                        if (((String) mcver.getSelectedItem()).equals("1.19")) {
-                            urlString = scanner.nextLine();
+
+                        if (((String) mcver.getSelectedItem()).equals("1.19.3")) {
+                            while (scanner.hasNextLine()) {
+                                String s = scanner.nextLine();
+                                if (s.contains("1193:")) urlString = s.replaceAll("1193:", "");
+                            }
                         }
                     } else if (((String) servertype.getSelectedItem()).equals("PaperMC")) {
                         Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "paperlink.txt"));
-                        if (((String) mcver.getSelectedItem()).equals("1.19")) {
+                        if (((String) mcver.getSelectedItem()).equals("1.19.2")) {
                             while (scanner.hasNextLine()) {
                                 String s = scanner.nextLine();
-                                if (s.contains("119:")) urlString = s.replaceAll("119:", "");
+                                if (s.contains("1192:")) urlString = s.replaceAll("1192:", "");
                             }
                         }
                     } else {

@@ -3,16 +3,14 @@ package msm;
 import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -26,13 +24,9 @@ class ServerTab extends JPanel {
 
     private final JLabel titleLabel, pathLabel, ramLabel, javaExeLabel;
 
+    private ServerConsoleDialog scd;
 
 
-    private final JTextArea outputArea;
-    private final JScrollPane outputPane;
-
-    private final JTextField commandInput = new JTextField();
-    private final ServerTab.SendCommandButton sendCommandButton = new ServerTab.SendCommandButton();
 
     private final ServerTab.PluginsButton pluginsButton = new ServerTab.PluginsButton();
 
@@ -66,7 +60,7 @@ class ServerTab extends JPanel {
         
         confdata = new String[9];
 
-        outputArea = new JTextArea(); outputArea.setRows(6); outputArea.setBackground(Color.white);
+
 
         try {
             Scanner scanner = new Scanner(conffile);
@@ -118,21 +112,6 @@ class ServerTab extends JPanel {
 
         gbc.gridy = 7; gbc.gridx = 0; gbc.gridwidth = 3; gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        outputArea.setEditable(false); 
-
-        outputPane = new JScrollPane(outputArea); outputArea.setLineWrap(true); 
-        outputPane.setVisible(false); outputPane.setOpaque(true);
-        
-        outputPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        outputPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        outputPane.getVerticalScrollBar().setUnitIncrement(16);
-
-        contents.add(outputPane, gbc); 
-
-        commandInput.setVisible(false); sendCommandButton.setVisible(false); commandInput.setToolTipText(LanguageManager.getTranslationsFromFile("CommandToolTip"));
-
-        gbc.gridy = 6; gbc.gridx = 0; gbc.gridwidth = 2; contents.add(commandInput, gbc);
-        gbc.gridx = 2; gbc.gridwidth = 1; gbc.anchor = GridBagConstraints.LINE_END;  contents.add(sendCommandButton, gbc);
 
         if (!new File(confFile.getParent() + File.separator + "server.properties").exists()) {
             optionButton.setEnabled(false);
@@ -147,6 +126,45 @@ class ServerTab extends JPanel {
         add(contents, BorderLayout.NORTH);
         add(buttons, BorderLayout.SOUTH);
 
+    }
+
+    class ServerConsoleDialog extends JFrame {
+        public final JTextPane outputArea;
+        public final JScrollPane outputPane;
+
+        private final JTextField commandInput = new JTextField(52);
+        private final ServerTab.SendCommandButton sendCommandButton = new ServerTab.SendCommandButton();
+
+        ServerConsoleDialog() {
+            super("Console - " + title);
+            this.setIconImage(Toolkit.getDefaultToolkit().getImage(SysConst.getImagesPath() + "msm.png"));
+            setLayout(new GridBagLayout()); setResizable(false); setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            GridBagConstraints gbc = new GridBagConstraints();
+
+            commandInput.setToolTipText(LanguageManager.getTranslationsFromFile("CommandToolTip"));
+
+            outputArea = new JTextPane();
+
+            outputArea.setEditable(false);
+
+            outputPane = new JScrollPane(outputArea, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            outputPane.setOpaque(true);
+
+            outputPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+            outputPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            outputPane.getVerticalScrollBar().setUnitIncrement(16);
+
+            gbc.gridx = 0; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.gridy = 0; gbc.insets = new Insets(8, 8, 8, 8); gbc.gridwidth = 2;
+            add(commandInput, gbc);
+
+            gbc.gridx = 2; gbc.anchor = GridBagConstraints.LINE_END; gbc.gridwidth = 1; add(sendCommandButton, gbc);
+
+            gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
+            outputPane.setPreferredSize(new Dimension(500, 200)); outputPane.revalidate();
+            add(outputPane, gbc);
+            pack();
+            setVisible(true);
+        }
     }
 
     public void reload() {
@@ -167,7 +185,6 @@ class ServerTab extends JPanel {
         ramLabel.setText(confdata[5] + " MB");
         pathLabel.setText(confdata[2]); folder = confdata[2];
         parentFrame.tPane.setIconAt(parentFrame.tPane.getSelectedIndex(), new ImageIcon(new ImageIcon(confdata[1]).getImage().getScaledInstance(24, 24, Image.SCALE_DEFAULT)));
-        parentFrame.pack();
     }
 
 
@@ -185,11 +202,15 @@ class ServerTab extends JPanel {
             pb.directory(new File(folder));
             pb.redirectErrorStream(true);
             pb.redirectOutput(new File(folder + File.separator + "log.txt"));
+
+            scd = new ServerConsoleDialog();
+
             serverThread = new ServerTab.ServerThread(pb);
             serverThread.start();
 
             PrintOutputThread pot = new PrintOutputThread();
-            pot.start();            
+            pot.start();
+
         }
 
 
@@ -210,7 +231,6 @@ class ServerTab extends JPanel {
                 optionButton.setEnabled(false);
                 updateButton.setEnabled(false);
                 pluginsButton.setEnabled(false);
-                sendCommandButton.setVisible(true); commandInput.setVisible(true);
                 serverProcess.waitFor();       
                     
 
@@ -224,8 +244,7 @@ class ServerTab extends JPanel {
                 optionButton.setEnabled(true);
                 updateButton.setEnabled(true);
                 pluginsButton.setEnabled(true);
-                sendCommandButton.setVisible(false); commandInput.setVisible(false);
-
+                scd.dispose();
             }
             
         }
@@ -235,16 +254,13 @@ class ServerTab extends JPanel {
 
         @Override
         public void run() {
-            outputPane.setVisible(true);
-            
             while (serverThread.isAlive() && !Thread.currentThread().isInterrupted()) {
                 try {
                     Scanner scanner = new Scanner(new File(folder + File.separator + "log.txt"));
                     String s = "";
                     while (scanner.hasNextLine()) s = s + scanner.nextLine() + '\n';
-                    outputArea.setText(s); outputArea.setRows(6);                                  
+                    scd.outputArea.setText(s);
                     scanner.close();
-                    parentFrame.pack();
                     Thread.sleep(500);
                 } catch (IOException ex) {
                     ex.printStackTrace();
@@ -252,8 +268,8 @@ class ServerTab extends JPanel {
                     break;
                 }
             }
-            outputArea.setText(""); outputPane.setVisible(false); parentFrame.pack();
-            
+            scd.outputArea.setText("");
+
         }
     }
 
@@ -284,14 +300,14 @@ class ServerTab extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            byte[] command = (commandInput.getText() + '\n').getBytes();
+            byte[] command = (scd.commandInput.getText() + '\n').getBytes();
             try {
                 serverProcessInput.write(command);
                 serverProcessInput.flush(); 
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(parentFrame, LanguageManager.getTranslationsFromFile("SendCommandError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
             } finally {
-                commandInput.setText("");
+                scd.commandInput.setText("");
             }
         }
     }
@@ -398,106 +414,129 @@ class ServerTab extends JPanel {
         }
     }
 
-    class PluginsDialog extends JDialog implements WindowListener {
+    class PluginsDialog extends JDialog {
         private final DeletePluginButton dpb = new DeletePluginButton();
 
-        private final JDialog dialog;
+        private final PluginsDialog dialog;
 
-        private final ButtonsCheckThread bct = new ButtonsCheckThread();
-        private final JList<String> pluginsList;
+        private JScrollPane spane = new JScrollPane();
+        private JTable pluginsTable;
 
-        private String[] pluginsNameList = new String[64];
+        private String[][] pluginsList = null;
+
 
         PluginsDialog(JFrame parent) {
             super(parent, "Plugins", true);
             this.dialog = this;
-            setLayout(new GridBagLayout()); setResizable(false); setBackground(Color.white); setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            setLayout(new BorderLayout(0, 20)); setResizable(true); setBackground(Color.white); setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             getContentPane().setBackground(Color.white);
 
 
-
-            GridBagConstraints gbc = new GridBagConstraints();
-
-            gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 1; gbc.gridheight = 3; gbc.ipadx = 120; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.anchor = GridBagConstraints.PAGE_START; gbc.insets = new Insets(10, 10, 10, 10);
-
-            pluginsList = new JList<String>(pluginsNameList); pluginsList.setBackground(Color.white);
-            loadPlugins(); add(pluginsList, gbc);
-            gbc.ipadx = 0; gbc.ipady = 0; gbc.gridx = 1; gbc.gridheight = 1; add(new AddPluginButton(), gbc);
-            gbc.gridy = 1; add(dpb, gbc);
-            gbc.gridy = 2; add(new OpenPluginsFolder(), gbc);
+            loadPlugins();
+            setMinimumSize(new Dimension(440, 270)); setSize(new Dimension(440, 270)); spane.setMinimumSize(new Dimension(230, 230));
+            add(spane, BorderLayout.CENTER);
+            JPanel buttons = new JPanel(new FlowLayout()); buttons.setBackground(Color.white);
+            buttons.add(new AddPluginButton()); buttons.add(dpb); buttons.add(new OpenPluginsFolder());
+            pluginsTable.setBackground(Color.white); pluginsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            add(buttons, BorderLayout.SOUTH);
 
 
-            bct.start();
-
-            pack();
             setVisible(true);
         }
 
-        @Override
-        public void windowClosing(WindowEvent w) {
-            bct.interrupt();
-        }
-
-        @Override
-        public void windowDeactivated(WindowEvent e) {}
-
-        @Override
-        public void windowActivated(WindowEvent e) {}
-
-        @Override
-        public void windowDeiconified(WindowEvent e) {}
-
-        @Override
-        public void windowIconified(WindowEvent e) {}
-
-        @Override
-        public void windowClosed(WindowEvent e) {}
-
-        @Override
-        public void windowOpened(WindowEvent e) {}
-
         public void loadPlugins() {
-            try {
-                File pluginsDir = new File(folder + File.separator + "plugins");
-                File[] filesList = pluginsDir.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.endsWith(".jar");
-                    }
-                });
+            final String[] columnNames = {LanguageManager.getTranslationsFromFile("Name").replace(":", "").replace("<b>", "").replace("</b>", ""), LanguageManager.getTranslationsFromFile("Version")};
 
-                int i = 0; pluginsNameList = new String[64];
-                for (File f : filesList) {
-                    pluginsNameList[i] = f.getName().replaceAll(".jar", "");
-                    i++;
+            try {
+                Scanner s = new Scanner(new File(folder + File.separator + "plugins.msm"));
+                int rowCount = 0;
+                while (s.hasNextLine()) {
+                    s.nextLine();
+                    rowCount++;
                 }
-            } catch (NullPointerException ex) {
+                pluginsList = new String[rowCount][2];
+                s.close(); s = new Scanner(new File(folder + File.separator + "plugins.msm"));
+                for (int i = 0; i < rowCount; i++) {
+                    String[] tokens = s.nextLine().split(":", 2);
+                    pluginsList[i][0] = tokens[0];
+                    pluginsList[i][1] = tokens[1];
+                }
+                s.close();
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            pluginsList.setListData(pluginsNameList);
-            dialog.pack();
+            pluginsTable = new JTable(pluginsList, columnNames) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            pluginsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (pluginsTable.getSelectedRow() == -1) {
+                        dpb.setEnabled(false);
+                    } else dpb.setEnabled(true);
+                }
+            });
+            spane.setViewportView(pluginsTable);
+
         }
 
         class DeletePluginButton extends JButton implements ActionListener {
             DeletePluginButton() {
                 super(LanguageManager.getTranslationsFromFile("DeletePlugin"));
-                addActionListener(this); setBackground(Color.white);
+                addActionListener(this); setBackground(Color.white); setEnabled(false);
             }
             @Override
             public void actionPerformed(ActionEvent e) {
                 int r = JOptionPane.showConfirmDialog(dialog, LanguageManager.getTranslationsFromFile("DeletePluginConfirm"), LanguageManager.getTranslationsFromFile("Confirm"), JOptionPane.YES_NO_OPTION);
                 if (r == JOptionPane.NO_OPTION) return;
+                String pluginSelectedName = "";
                 try {
-                    String pluginSelectedName = pluginsNameList[pluginsList.getSelectedIndex()];
+                    pluginSelectedName = pluginsList[pluginsTable.getSelectedRow()][0];
                     if(!new File(folder + File.separator + "plugins" + File.separator + pluginSelectedName + ".jar").delete()) {
                         JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("DeletePluginError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
-                        return;
+                    } else {
+                        File[] directories = new File(folder + File.separator + "plugins").listFiles();
+                        for (File f : directories) {
+                            if (f.isDirectory() && f.getName().contains(pluginSelectedName))
+                                FileUtils.deleteDirectory(f);
+                        }
                     }
-                    File[] directories = new File(folder + File.separator + "plugins").listFiles();
-                    for (File f : directories) {
-                        if (f.isDirectory() && f.getName().contains(pluginSelectedName)) FileUtils.deleteDirectory(f);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                try {
+                    Scanner s = new Scanner(new File(folder + File.separator + "plugins.msm"));
+                    int rowToDelete = -1;
+                    int rowCount = 0;
+                    while (s.hasNextLine()) {
+                        s.nextLine();
+                        rowCount++;
                     }
-                } catch (IOException ex) {}
+                    s.close(); s = new Scanner(new File(folder + File.separator + "plugins.msm"));
+                    String[] rows = new String[rowCount];
+                    for (int h = 0; h < rowCount; h++) {
+                        rows[h] = s.nextLine();
+                        if (rows[h].contains(pluginSelectedName)) rowToDelete = h;
+                    }
+
+                    s.close();
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(folder + File.separator + "plugins.msm"));
+                    for (int z = 0; z < rowCount; z++) {
+                        if (z == rowToDelete) continue;
+                        bw.write(rows[z] + "\n");
+                    }
+                    bw.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+
+
+
+
                 loadPlugins();
             }
         }
@@ -511,20 +550,8 @@ class ServerTab extends JPanel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser chooser = new JFileChooser();
-                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY); chooser.setAcceptAllFileFilterUsed(false);
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("JAR file", "jar");
-                chooser.setFileFilter(filter);
-                int r = chooser.showOpenDialog(dialog);
-                if (r == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        FileUtils.copyFile(chooser.getSelectedFile(), new File(folder + File.separator + "plugins" + File.separator + chooser.getSelectedFile().getName()));
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(dialog, LanguageManager.getTranslationsFromFile("PluginAddingError"), LanguageManager.getTranslationsFromFile("Error"), JOptionPane.ERROR_MESSAGE);
-                    }
-                    loadPlugins();
-                    pluginsList.setListData(pluginsNameList);
-                }
+                new AddPluginDialog(dialog, folder);
+                loadPlugins();
             }
         }
 
@@ -545,17 +572,5 @@ class ServerTab extends JPanel {
             }
         }
 
-        class ButtonsCheckThread extends Thread {
-            @Override
-            public void run() {
-                while (!Thread.currentThread().isInterrupted()) {
-                    if (pluginsList.getSelectedIndex() == -1) {
-                        dpb.setEnabled(false);
-                    } else {
-                        dpb.setEnabled(true);
-                    }
-                }
-            }
-        }
     }
 }

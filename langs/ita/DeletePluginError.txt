@@ -1,1 +1,2 @@
 Si è verificato un errore durante la rimozione del plugin.
+Potrebbe essere già stato rimosso.

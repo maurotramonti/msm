@@ -1,0 +1,4 @@
+Allows Minecraft: Bedrock Edition players to join Java Edition servers
+Used with GeyserMC, it allows the players who didn't buy a copy of Minecraft: Java Edition to join Java servers
+Allows players with a newer version to join servers which haven't been updated yet
+

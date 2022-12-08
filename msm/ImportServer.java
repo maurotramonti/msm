@@ -154,7 +154,7 @@ class ImportServerDialog extends JDialog {
                 bw.write(nameInput.getText() + '\n');
                 if (new File(originalServerFolder + File.separator + "server-icon.png").exists()) {
                     bw.write(originalServerFolder + File.separator + "server-icon.png" + '\n');
-                } else bw.write("\n");                
+                } else bw.write(SysConst.getImagesPath() + "default_icon.jpg\n");
                 bw.write(originalServerFolder + '\n');
                 bw.write((String) mcver.getSelectedItem() + '\n');
                 if (!jreCheckBox.isSelected()) {

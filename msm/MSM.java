@@ -23,7 +23,7 @@ class SysConst {
 
     public static String getServersPath() {
         if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\servers\\";
-        else return "/etc/msm/images/";
+        else return "/etc/msm/servers/";
     }
     public static String getImagesPath() {
         if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") + "\\msm\\images\\";
@@ -47,10 +47,9 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
     MSMFrame() {
-        super("Minecraft Server Manager 1.0");
+        super("Minecraft Server Manager 1.1");
         frame = this;
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.setResizable(false);
         this.setIconImage(Toolkit.getDefaultToolkit().getImage(SysConst.getImagesPath() + "msm.png"));
         this.addWindowListener(this);
 
@@ -100,9 +99,7 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
         this.add(tPane);
-        //this.setSize(new Dimension(400, 400));
-        if (tPane.getTabCount() > 0) this.pack();
-        else this.setSize(500, 500);
+        this.setMinimumSize(new Dimension(600, 350));
 
         this.setJMenuBar(menuBar);
         new MenuItemsController().start();
@@ -173,8 +170,6 @@ class MSMFrame extends JFrame implements WindowListener {
                 }
             }
         }
-
-        if (tPane.getTabCount() == 0) this.setSize(400, 400);
     } 
 
     public void checkUpdates(boolean showOnlyIfPositive) {
@@ -187,7 +182,7 @@ class MSMFrame extends JFrame implements WindowListener {
             if (readVersion > internalVersion) {
                 JOptionPane.showMessageDialog(frame, LanguageManager.getTranslationsFromFile("UpdatesAvailable"), LanguageManager.getTranslationsFromFile("CheckUpdatesTitle"), JOptionPane.INFORMATION_MESSAGE);
             } else {
-                if (showOnlyIfPositive == false) JOptionPane.showMessageDialog(frame, LanguageManager.getTranslationsFromFile("NoUpdates"), LanguageManager.getTranslationsFromFile("CheckUpdatesTitle"), JOptionPane.INFORMATION_MESSAGE);                    
+                if (!showOnlyIfPositive) JOptionPane.showMessageDialog(frame, LanguageManager.getTranslationsFromFile("NoUpdates"), LanguageManager.getTranslationsFromFile("CheckUpdatesTitle"), JOptionPane.INFORMATION_MESSAGE);
             }
             scanner.close();
 

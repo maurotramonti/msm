@@ -1,1 +1,2 @@
 An error has occurred while deleting the plugin.
+It may have already beed removed.
