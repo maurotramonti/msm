@@ -47,7 +47,7 @@ class MSMFrame extends JFrame implements WindowListener {
 
 
     MSMFrame() {
-        super("Minecraft Server Manager 1.1");
+        super("Minecraft Server Manager 1.2");
         frame = this;
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.setIconImage(Toolkit.getDefaultToolkit().getImage(SysConst.getImagesPath() + "msm.png"));
@@ -175,7 +175,7 @@ class MSMFrame extends JFrame implements WindowListener {
     public void checkUpdates(boolean showOnlyIfPositive) {
         final int internalVersion = 100;
         try {
-            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/latest.txt"), new File(SysConst.getConfPath() + "latest.txt"), 30000,30000);
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/conf/latest.txt"), new File(SysConst.getConfPath() + "latest.txt"), 30000,30000);
             Scanner scanner = new Scanner(new File(SysConst.getConfPath() + "latest.txt"));
             final int readVersion = Integer.parseInt(scanner.nextLine());
             System.out.println(readVersion);
@@ -186,8 +186,8 @@ class MSMFrame extends JFrame implements WindowListener {
             }
             scanner.close();
 
-            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/paperlink.txt"), new File(SysConst.getConfPath() + "paperlink.txt"), 30000,30000);
-            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/vanillalink.txt"), new File(SysConst.getConfPath() + "vanillalink.txt"), 30000,30000);
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/conf/paperlink.txt"), new File(SysConst.getConfPath() + "paperlink.txt"), 30000,30000);
+            FileUtils.copyURLToFile(new URL("https://raw.githubusercontent.com/maurotramonti/msm/main/conf/vanillalink.txt"), new File(SysConst.getConfPath() + "vanillalink.txt"), 30000,30000);
 
             File lastcheckfile = new File(SysConst.getConfPath() + "lastcheck.txt");
             BufferedWriter bw = new BufferedWriter(new FileWriter(lastcheckfile));
