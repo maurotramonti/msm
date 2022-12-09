@@ -448,7 +448,9 @@ class ServerTab extends JPanel {
             final String[] columnNames = {LanguageManager.getTranslationsFromFile("Name").replace(":", "").replace("<b>", "").replace("</b>", ""), LanguageManager.getTranslationsFromFile("Version")};
 
             try {
-                Scanner s = new Scanner(new File(folder + File.separator + "plugins.msm"));
+                File pluginsListFile = new File(folder + File.separator + "plugins.msm");
+                if (!pluginsListFile.exists()) pluginsListFile.createNewFile();
+                Scanner s = new Scanner(pluginsListFile);
                 int rowCount = 0;
                 while (s.hasNextLine()) {
                     s.nextLine();

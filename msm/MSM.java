@@ -17,7 +17,7 @@ import java.util.Scanner;
 class SysConst {
     static final String system = System.getProperty("os.name");
     public static String getConfPath() {
-        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") +  "\\msm\\conf\\";
+        if (system.contains("Windows")) return System.getenv("LOCALAPPDATA") +  "\\msm\\conf\\" ;
         else return "/etc/msm/conf/";
     }
 
