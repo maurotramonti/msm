@@ -25,6 +25,11 @@ The standard procedure could be difficult for people who hasn't experience in co
  - More game options
  - More Minecraft versions and softwares
  - Minecraft: Bedrock Edition servers
+ - More languages, such as German and Spanish
+ 
+## Screenshots
+
+![mainscreen](https://i.ibb.co/GFtsPHb/schermata-principale-censurato.jpg)
  
 ## Downloads
 
@@ -32,8 +37,7 @@ You can get your copy by visiting the [release page](https://github.com/maurotra
 
 ## Known bugs
 
- - ~~**MSM-2**: ticking the option "Use default Java executable" in Import Server dialog will produce an error~~
- - ~~**MSM-1**: when a server is created, but not started for the first time, the "Server Options" button won't make anything~~
+See the "**Issues**" tab of this repository.
  
 ## Contacts
 
